@@ -7,6 +7,8 @@ const passport = require('passport');
 const Profile = require('../../models/Profile');
 const User = require('../../models/User');
 
+const validateProfileInput = require('../../validation/profile');
+
 router.get('/test',(req,res)=>{
     res.json({status:'success'});
 })
@@ -17,10 +19,11 @@ router.get('/test',(req,res)=>{
 router.get('/',passport.authenticate('jwt',{session:false}),(req,res)=>{
     const errors = {};
     Profile.findOne({user:req.user.id})
+        .populate('user',['name','avatar','email'])
         .then(profile=>{
             errors.noprofile = "There is no profile for current user";
             if(!profile) return res.status(400).json(errors);
-            return json.profile();
+            return res.json(profile);
         })
         .catch(err => res.status(404).json(err));
 })
@@ -29,14 +32,20 @@ router.get('/',passport.authenticate('jwt',{session:false}),(req,res)=>{
 //  @desc   Create current user profile
 //  @access Private
 router.post('/',passport.authenticate('jwt',{session:false}),(req,res)=>{
-    const errors = {};
+    const {errors ,isValid} = validateProfileInput(req.body);
     const profileFields = {};
+
+    //valitation
+    if(!isValid){
+        return res.status(400).json(errors);
+    }
 
     profileFields.user = req.user.id;
     if(req.body.handle) profileFields.handle = req.body.handle;
     if(req.body.location) profileFields.handle = req.body.location;
     if(req.body.bio) profileFields.bio = req.body.bio;
     if(req.body.status) profileFields.status = req.body.status;
+
 
     Profile.findOne({user:req.user.id})
         .then(profile=>{
@@ -61,8 +70,6 @@ router.post('/',passport.authenticate('jwt',{session:false}),(req,res)=>{
                                 .then(profile => res.json(profile));
                         }
                     })
-                //create new profile
-
             }
         })
 })
