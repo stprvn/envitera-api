@@ -2,7 +2,9 @@ const express = require('express');
 const router  = express.Router();
 const gravatar = require('gravatar');
 const bcrypt    = require('bcryptjs');
+const jwt       = require('jsonwebtoken');
 
+const keys      = require('../../config/keys');
 //load user model
 const User = require('../../models/User');
 
@@ -64,7 +66,21 @@ router.post('/login',(req,res)=>{
             bcrypt.compare(password,user.password)
                 .then(isMatch => {
                     if(isMatch){
-                        res.json({msg:"Succes"});
+                        // User Match
+                        //generate token
+                        const payload = {
+                            id:user.id,name:user.name, avatar:user.avatar
+                        }
+                        jwt.sign(payload,
+                            keys.secretOrKey,
+                            {expiresIn:7200},
+                            (err,token)=>{
+                                res.send({
+                                    success: true,
+                                    token  :  'Jose'+token 
+                                })
+                            }
+                        );
                     }else{
                         return res.status(400).json({msg:"Password atau Email Salah"});
                     }
