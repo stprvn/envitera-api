@@ -1,3 +1,4 @@
+const bodyParser   = require('body-parser');
 const mongoose  = require('mongoose');
 const express = require('express');
 const app = express();
@@ -6,9 +7,10 @@ const posts = require('./routes/api/posts');
 const users = require('./routes/api/users');
 const profiles = require('./routes/api/profiles');
 
-app.use(express.json());
+app.use(bodyParser.urlencoded({extended:false}));
+app.use(bodyParser.json());
 
-mongoose.connect('mongodb://localhost/enviteramean')
+mongoose.connect('mongodb://localhost/enviteramean',{ useNewUrlParser: true })
     .then( ()=> console.log('Connected...'))
     .catch( err => console.error('Connecting Failed...',err))
 
