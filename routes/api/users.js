@@ -3,6 +3,8 @@ const router  = express.Router();
 const gravatar = require('gravatar');
 const bcrypt    = require('bcryptjs');
 const jwt       = require('jsonwebtoken');
+const passport = require('passport');
+
 
 const keys      = require('../../config/keys');
 //load user model
@@ -67,7 +69,7 @@ router.post('/login',(req,res)=>{
                 .then(isMatch => {
                     if(isMatch){
                         // User Match
-                        //generate token
+                        //generate token and embeded payload in token
                         const payload = {
                             id:user.id,name:user.name, avatar:user.avatar
                         }
@@ -77,7 +79,7 @@ router.post('/login',(req,res)=>{
                             (err,token)=>{
                                 res.send({
                                     success: true,
-                                    token  :  'Jose'+token 
+                                    token  :  'Bearer '+token 
                                 })
                             }
                         );
@@ -88,8 +90,16 @@ router.post('/login',(req,res)=>{
         })
 })
 
-
-
+//  @route  POST api/users/current
+//  @desc   return user current payload
+//  @access Private
+router.get('/current',passport.authenticate('jwt',{session:false}),(req,res)=>{
+    res.json({
+        id: req.user.id,
+        name: req.user.name,
+        email: req.user.email
+    });
+})
 
 
 
