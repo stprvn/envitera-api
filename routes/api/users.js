@@ -9,6 +9,8 @@ const passport = require('passport');
 const keys      = require('../../config/keys');
 //load user model
 const User = require('../../models/User');
+//Input Validation
+const validationRegisterInput = require('../../validation/register');
 
 router.get('/test',(req,res)=>{
     res.json({status:'success'});
@@ -18,11 +20,19 @@ router.get('/test',(req,res)=>{
 //  @desc   Register User
 //  @access Public
 router.post('/register',(req,res)=>{
+
+    //validate input
+    const {errors, isValid} = validationRegisterInput(req.body);
+    if(!isValid){
+        return res.status(400).json(errors);
+    }
+    //proses valid input
     //check user exist on database
     User.findOne({email:req.body.email})
     .then(user => {
         if(user){
-            return res.status(400).json({email:"Email Sudah Terdafar"});
+            errors.email = "Email Sudah Terdafar";
+            return res.status(400).json(errors);
         }else{
             const avatar = gravatar.url(req.body.email,{
                 e:200, //Size
@@ -90,7 +100,7 @@ router.post('/login',(req,res)=>{
         })
 })
 
-//  @route  POST api/users/current
+//  @route  GET api/users/current
 //  @desc   return user current payload
 //  @access Private
 router.get('/current',passport.authenticate('jwt',{session:false}),(req,res)=>{
