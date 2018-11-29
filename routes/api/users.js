@@ -54,7 +54,22 @@ router.post('/register', (req, res) => {
                         newUser.password = hash;
                         //save user
                         newUser.save()
-                            .then(user => res.json(user))
+                            .then(user => {
+                                //generate token and embeded payload in token
+                                const payload = {
+                                    id: user.id, name: user.name, avatar: user.avatar
+                                }
+                                jwt.sign(payload,
+                                    keys.secretOrKey,
+                                    { expiresIn: 7200 },
+                                    (err, token) => {
+                                        res.send({
+                                            success: true,
+                                            token: 'Bearer ' + token
+                                        })
+                                    }
+                                );
+                            })
                             .catch(err => console.log(err.message));
                     })
                 })
